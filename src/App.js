@@ -81,9 +81,19 @@ function App() {
 
     setDurationTime(performance.now() - t);
   }, []);
+  const handleFileSelect = useCallback(({target: { files }}) => {
+    for (let i = 0; i < files.length; ++i) {
+      const file = files[i];
+      if (!(/^image\/.*$/i.test(file.type))) continue;
+      const freader = new FileReader();
+      freader.onload = e => imgRef.current.src = e.target.result;
+      freader.readAsDataURL(file);
+      break;
+    }
+  }, []);
   return (
     <div>
-      <p><button onClick={handleClick}>run</button> <span>Total: {~~(durationTime / 10) / 100} second</span></p>
+      <p><input type='file' onChange={handleFileSelect} /> <button onClick={handleClick}>run</button> <span>Total: {~~(durationTime / 10) / 100} second</span></p>
       <img ref={imgRef} alt='input' id='input' src='./silueta_me_test.png' />
       <canvas ref={canvasRef} id='output' />
     </div>
