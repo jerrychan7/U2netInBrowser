@@ -91,8 +91,21 @@ function App() {
       break;
     }
   }, []);
+  const handleDragEnter = useCallback(e => {
+    console.log("DragEnter", e);
+  }, []);
+  const handleDragLeave = useCallback(e => {
+    console.log("DragLeave", e);
+  }, []);
+  const handleDrop = useCallback(e => {
+    e.preventDefault();
+    handleFileSelect({target: e.dataTransfer});
+  }, [handleFileSelect]);
+  const handlePaste = useCallback(e => {
+    handleFileSelect({target: e.clipboardData});
+  }, [handleFileSelect]);
   return (
-    <div>
+    <div onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={e => e.preventDefault()} onDrop={handleDrop} onPaste={handlePaste}>
       <p><input type='file' onChange={handleFileSelect} /> <button onClick={handleClick}>run</button> <span>Total: {~~(durationTime / 10) / 100} second</span></p>
       <img ref={imgRef} alt='input' id='input' src='./silueta_me_test.png' />
       <canvas ref={canvasRef} id='output' />
