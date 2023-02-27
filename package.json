@@ -2,6 +2,7 @@
   "name": "u-2-net-in-browser",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://jerrychan7.github.io/U2netInBrowser/",
   "dependencies": {
     "onnxruntime-web": "^1.14.0",
     "react": "^18.2.0",
@@ -12,7 +13,9 @@
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
-    "eject": "react-app-rewired eject"
+    "eject": "react-app-rewired eject",
+    "predeploy": "npm run build", 
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -34,6 +37,7 @@
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
+    "gh-pages": "^5.0.0",
     "react-app-rewired": "^2.2.1"
   }
 }

@@ -2,6 +2,9 @@
 
 This project attempts to run [U2Net](https://github.com/xuebinqin/U-2-Net) in a web browser. The project is based on the reduced-size U2Net model proposed in [silueta.me](https://github.com/xuebinqin/U-2-Net/issues/295), and is inferencing in the browser through the ONNX web runtime.
 
+You can try online: [https://jerrychan7.github.io/U2netInBrowser/](https://jerrychan7.github.io/U2netInBrowser/).
+**After the web page is opened, the model (*42MB in size*) will be loaded directly. Please open it when the network environment is suitable, such as WiFi.**
+
 ## Development
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and [React App Rewired](https://github.com/timarney/react-app-rewired).
