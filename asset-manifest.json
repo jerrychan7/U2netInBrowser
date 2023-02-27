@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/U2netInBrowser/static/css/main.0e48e742.css",
+    "main.js": "/U2netInBrowser/static/js/main.419a4d26.js",
+    "static/js/ort-wasm-simd.wasm": "/U2netInBrowser/static/js/ort-wasm-simd.wasm",
+    "static/js/ort-wasm-simd-threaded.wasm": "/U2netInBrowser/static/js/ort-wasm-simd-threaded.wasm",
+    "static/js/ort-wasm.wasm": "/U2netInBrowser/static/js/ort-wasm.wasm",
+    "static/js/ort-wasm-threaded.wasm": "/U2netInBrowser/static/js/ort-wasm-threaded.wasm",
+    "index.html": "/U2netInBrowser/index.html",
+    "main.0e48e742.css.map": "/U2netInBrowser/static/css/main.0e48e742.css.map",
+    "main.419a4d26.js.map": "/U2netInBrowser/static/js/main.419a4d26.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.0e48e742.css",
+    "static/js/main.419a4d26.js"
+  ]
+}
