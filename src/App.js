@@ -24,7 +24,11 @@ const normPRED = (d, s = 1) => {
   return d.map(i => ((i - mi) / (ma - mi)) * s);
 };
 
-// const sleep0 = () => new Promise(s => window.requestAnimationFrame(s));
+const sleep = (i = 1) => new Promise(s => {
+  const frame = () =>
+    window.requestAnimationFrame(--i > 0? frame: s);
+  frame();
+});
 // const time2str = t => {
 //   return t > 60000
 //     ? ~~(t / 6000) / 10 + 'min'
@@ -34,7 +38,9 @@ const normPRED = (d, s = 1) => {
 // };
 
 function App() {
-  const canvasRef = useRef(null), imgRef = useRef(null);
+  const canvasRef = useRef(null), imgRef = useRef(null), maskCanvasRef = useRef(null);
+  const [showMask, setShowMask] = useState(false);
+  const [isInferencing, setIsInferencing] = useState(false);
   // const [durationTime, setDurationTime] = useState(0);
   // const [showDropCover, setShowDropCover] = useState(false);
   // const [timeRecord, setTimeRecord] = useState({
@@ -51,10 +57,13 @@ function App() {
   const handleClick = useCallback(async () => {
     if (!canvasRef.current || !imgRef) return;
 
+    setIsInferencing(true);
+    await sleep(2);
+
     // setTimeRecord(Object.fromEntries(Object.keys(timeRecord).map(k => [k, { t: 0, s: '...' }])));
     // const setRecord = (k, dt) => setTimeRecord({ ...timeRecord,
     //   [k]: { t: dt, s: time2str(dt) }
-    // }) || sleep0();
+    // }) || sleep();
 
     const zoomHelperCanvas = document.createElement('canvas'), zoomHelperCtx = zoomHelperCanvas.getContext('2d', { willReadFrequently: true });
     const zoomImg = (img, w = 320, h = 320, canvas = zoomHelperCanvas, ctx = zoomHelperCtx) => {
@@ -113,13 +122,21 @@ function App() {
     const outputImgData = zoomImg(zoomHelperCanvas, img.naturalWidth, img.naturalHeight, canvas, ctx);
     const inputImgData = zoomImg(img, img.naturalWidth, img.naturalHeight);
     for (let i = 0; i < inputImgData.data.length; i += 4) {
-      outputImgData.data[i + 0] = inputImgData.data[i + 0];
-      outputImgData.data[i + 1] = inputImgData.data[i + 1];
-      outputImgData.data[i + 2] = inputImgData.data[i + 2];
+      inputImgData.data[i + 3] = outputImgData.data[i + 3];
     }
-    ctx.putImageData(outputImgData, 0, 0);
+    ctx.putImageData(inputImgData, 0, 0);
+
+    const maskCanvas = maskCanvasRef.current, maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
+    maskCanvas.width = img.naturalWidth;
+    maskCanvas.height = img.naturalHeight;
+    for (let i = 0; i < outputImgData.data.length; i += 4) {
+      outputImgData.data[i + 0] = outputImgData.data[i + 1] = outputImgData.data[i + 2] = outputImgData.data[i + 3];
+      outputImgData.data[i + 3] = 255;
+    }
+    maskCtx.putImageData(outputImgData, 0, 0);
 
     // setDurationTime(performance.now() - t);
+    setIsInferencing(false);
   }, []);
   const handleFileSelect = useCallback(({target: { files }}) => {
     for (let i = 0; i < files.length; ++i) {
@@ -149,10 +166,13 @@ function App() {
   const handleDownload = useCallback(e => {
     const mine = 'image/png';
     const a = document.getElementById('download_a');
-    a.href = canvasRef.current.toDataURL(mine, 1).replace(mine, 'image/octet-stream');
+    const canvas = (showMask? maskCanvasRef: canvasRef).current;
+    a.href = canvas.toDataURL(mine, 1).replace(mine, 'image/octet-stream');
     a.click();
-  }, []);
-  const toggleMaskBtnClick = useCallback(e => {}, []);
+  }, [showMask]);
+  const toggleMaskBtnClick = useCallback(e => {
+    setShowMask(!showMask);
+  }, [showMask]);
   return <div id='react-app-container' onDragEnter={handleDragEnter} onDragOver={e => e.preventDefault()} onDrop={handleDrop} onPaste={handlePaste} onDragLeave={handleDragLeave}>
     <Nav />
     <main>
@@ -183,6 +203,8 @@ function App() {
           <div className='btn inferencing' onClick={handleClick}>click</div>
           <div className='output-wrap'>
             <canvas ref={canvasRef} id='output' className='stripe-bg' />
+            <canvas ref={maskCanvasRef} id='mask-output' style={{ display: showMask? '': 'none' }} />
+            <div className='time-board' style={{ display: isInferencing? '': 'none' }}>Magic Time</div>
             {/* <div className='time-board'>
               <table>
                 <thead><tr><th></th>       <th>Time</th></tr></thead>
@@ -202,12 +224,12 @@ function App() {
           </div>
         </div>
         <div className='toolbar2'>
-          {/* <button className='btn' onClick={toggleMaskBtnClick}>mask</button> */}
+          <button className={showMask? 'btn': 'btn stripe-bg'} onClick={toggleMaskBtnClick}>mask</button>
           <button className='btn' onClick={handleDownload}>download</button>
         </div>
         <p>
           {/* <span>Total: {~~(durationTime / 10) / 100} second</span> */}
-          The app can only handle images. If it's a gif, only the first frame can be processed.
+          The app can only handle images. If it's a .gif, only the first frame can be processed.
         </p>
       </section>
     </main>
