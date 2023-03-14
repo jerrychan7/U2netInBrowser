@@ -42,7 +42,7 @@ function App() {
   const [showMask, setShowMask] = useState(false);
   const [isInferencing, setIsInferencing] = useState(false);
   // const [durationTime, setDurationTime] = useState(0);
-  // const [showDropCover, setShowDropCover] = useState(false);
+  const [showDragCover, setShowDragCover] = useState(false);
   // const [timeRecord, setTimeRecord] = useState({
   //   'read': { t: 0, s: '' },
   //   'onnx': { t: 0, s: '' },
@@ -149,15 +149,17 @@ function App() {
     }
   }, []);
   const handleDragEnter = useCallback(e => {
-    console.log('DragEnter', e);
-    // setShowDropCover(true);
+    e.preventDefault();
+    setShowDragCover(true);
   }, []);
   const handleDragLeave = useCallback(e => {
-    console.log('DragLeave', e);
-    // setShowDropCover(false);
+    if (e.target.id !== 'react-app-container' && !e.target.className.includes('drag-cover'))
+      return;
+    setShowDragCover(false);
   }, []);
   const handleDrop = useCallback(e => {
     e.preventDefault();
+    setShowDragCover(false);
     handleFileSelect({target: e.dataTransfer});
   }, [handleFileSelect]);
   const handlePaste = useCallback(e => {
@@ -173,8 +175,15 @@ function App() {
   const toggleMaskBtnClick = useCallback(e => {
     setShowMask(!showMask);
   }, [showMask]);
-  return <div id='react-app-container' onDragEnter={handleDragEnter} onDragOver={e => e.preventDefault()} onDrop={handleDrop} onPaste={handlePaste} onDragLeave={handleDragLeave}>
-    <Nav />
+  return <div id='react-app-container'
+      onPaste={handlePaste}
+      onDragEnter={handleDragEnter}
+      onDrop={handleDrop}
+      onDragOver={handleDragEnter}
+      onDragLeaveCapture={handleDragLeave}
+      onDragExitCapture={handleDragLeave}
+  >
+    <Nav/>
     <main>
       <section id='section-kanban'>
         <div id='kanban-musume'>
@@ -234,9 +243,12 @@ function App() {
       </section>
     </main>
     <input id='file-selector' type='file' onChange={handleFileSelect} hidden />
-    {/* <div className='drop-cover' style={{ display: showDropCover? '': 'none' }}>
+    <div className={'drag-cover' + (showDragCover? ' show': '')}
+      onDragLeaveCapture={handleDragLeave}
+      onDragExitCapture={handleDragLeave}
+    >
       <p>Drop your image file here to find the salient object!</p>
-    </div> */}
+    </div>
     <a id='download_a' download='result.png'></a>
   </div>;
 }

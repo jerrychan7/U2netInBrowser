@@ -110,18 +110,20 @@ main {
 }
 #download_a { display: none; }
 
-.drop-cover {
+.drag-cover {
   position: fixed;
   top: 0; left: 0;
   width: 100%;
   height: 100%;
-  display: flex;
   justify-content: center;
   align-items: center;
   background-color: rgba(230, 230, 230, .8);
-  pointer-events: none;
+  display: none;
 }
-.drop-cover p {
+.drag-cover.show {
+  display: flex;
+}
+.drag-cover p {
   display: inline-block;
   border: 4px #666 dashed;
   border-radius: 1rem;
@@ -130,6 +132,7 @@ main {
   font-size: 2rem;
   text-shadow: 0 0 2px #fff;
   font-weight: bold;
+  pointer-events: none;
 }
 #file-selector { display: none; opacity: 0; }
 .echo-area > * {
