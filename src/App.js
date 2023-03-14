@@ -29,41 +29,35 @@ const sleep = (i = 1) => new Promise(s => {
     window.requestAnimationFrame(--i > 0? frame: s);
   frame();
 });
-// const time2str = t => {
-//   return t > 60000
-//     ? ~~(t / 6000) / 10 + 'min'
-//     : t > 1000
-//     ? ~~(t / 100) / 10 + 'sec'
-//     : ~~(t * 10) / 10 + 'ms';
-// };
+const time2str = t => {
+  return t > 60000
+    ? ~~(t / 6000) / 10 + 'min'
+    : t > 1000
+    ? ~~(t / 100) / 10 + 'sec'
+    : ~~(t * 10) / 10 + 'ms';
+};
 
 function App() {
   const canvasRef = useRef(null), imgRef = useRef(null), maskCanvasRef = useRef(null);
   const [showMask, setShowMask] = useState(false);
   const [isInferencing, setIsInferencing] = useState(false);
-  // const [durationTime, setDurationTime] = useState(0);
   const [showDragCover, setShowDragCover] = useState(false);
-  // const [timeRecord, setTimeRecord] = useState({
-  //   'read': { t: 0, s: '' },
-  //   'onnx': { t: 0, s: '' },
-  //   'zoom': { t: 0, s: '' },
-  //   'convert': { t: 0, s: '' },
-  //   'inferencing': { t: 0, s: '' },
-  //   'invNorm': { t: 0, s: '' },
-  //   'mask': { t: 0, s: '' },
-  //   'result': { t: 0, s: '' },
-  //   'total': { t: 0, s: '' },
-  // });
+  const emptyTimeRecord = () => Object.fromEntries(
+    'read,onnx,zoom,convert,inferencing,invNorm,result,mask,total'
+    .split(',').map(k => [k, { t: 0, s: '' }])
+  );
+  const [timeRecord, setTimeRecord] = useState(emptyTimeRecord());
   const handleClick = useCallback(async () => {
     if (!canvasRef.current || !imgRef) return;
 
     setIsInferencing(true);
     await sleep(2);
 
-    // setTimeRecord(Object.fromEntries(Object.keys(timeRecord).map(k => [k, { t: 0, s: '...' }])));
-    // const setRecord = (k, dt) => setTimeRecord({ ...timeRecord,
-    //   [k]: { t: dt, s: time2str(dt) }
-    // }) || sleep();
+    let tr = emptyTimeRecord();
+    setTimeRecord(tr);
+    const setRecord = (k, dt) => setTimeRecord(tr = { ...tr,
+      [k]: { t: dt, s: time2str(dt) }
+    }) || sleep();
 
     const zoomHelperCanvas = document.createElement('canvas'), zoomHelperCtx = zoomHelperCanvas.getContext('2d', { willReadFrequently: true });
     const zoomImg = (img, w = 320, h = 320, canvas = zoomHelperCanvas, ctx = zoomHelperCtx) => {
@@ -78,25 +72,25 @@ function App() {
 
     console.log('running');
     let t = performance.now(), lt = t;
-    // const recording = k =>{ console.log(JSON.stringify(timeRecord), k, performance.now() - lt, time2str(performance.now() - lt));
-    //   return setRecord(k, performance.now() - lt)
-    //   .then(() => lt = performance.now());}
+    const recording = k =>
+      setRecord(k, performance.now() - lt)
+      .then(() => lt = performance.now());
 
-    // const inputImgData = zoomImg(img, img.naturalWidth, img.naturalHeight, canvas, ctx);
-    // await recording('read');
+    const inputImgData = zoomImg(img, img.naturalWidth, img.naturalHeight, canvas, ctx);
+    await recording('read');
 
     let session = await inferenceSession;
-    // await recording('onnx');
+    await recording('onnx');
 
     // zoom the image to 320 x 320
     // The original uses a Gaussian filter for smoothing, but here
     // the browser's built-in smooth zoom is used instead of skimage.transform.resize(anti_aliasing=True).
     // Original: https://github.com/xuebinqin/U-2-Net/blob/53dc9da026650663fc8d8043f3681de76e91cfde/data_loader.py#L40
     // Gaussian: https://scikit-image.org/docs/dev/api/skimage.transform.html?highlight=transform#skimage.transform.resize
-    const zoomedInputImgData = zoomImg(img),
+    const zoomedInputImgData = zoomImg(img, 320, 320, canvas, ctx),
       len = zoomedInputImgData.data.length,
       w = 320, h = 320;
-    // await recording('zoom');
+    await recording('zoom');
 
     // Normalize the input, and convert it to tensor.
     const inputTensor = new Float32Array(len / 4 * 3);
@@ -107,24 +101,25 @@ function App() {
       inputTensor[sg + j] = (zoomedInputImgData.data[i + 1] / 255 - MEAN_G) / STD_G;
       inputTensor[sb + j] = (zoomedInputImgData.data[i + 2] / 255 - MEAN_B) / STD_B;
     }
-    // await recording('convert');
+    await recording('convert');
     const output = await session.run({
       'input.1': new ort.Tensor('float32', inputTensor, [1, 3, h, w])
     });
-    // await recording('inferencing');
+    await recording('inferencing');
     const pred = normPRED(output['1959'].data, 255);
-    // await recording('invNorm');
+    await recording('invNorm');
 
     // Put the result to alpha channal.
     for (let i = 0; i < len; i += 4)
       zoomedInputImgData.data[i + 3] = pred[i >> 2];
+    zoomHelperCanvas.width = zoomHelperCanvas.height = 320;
     zoomHelperCtx.putImageData(zoomedInputImgData, 0, 0, 0, 0, w, h);
     const outputImgData = zoomImg(zoomHelperCanvas, img.naturalWidth, img.naturalHeight, canvas, ctx);
-    const inputImgData = zoomImg(img, img.naturalWidth, img.naturalHeight);
     for (let i = 0; i < inputImgData.data.length; i += 4) {
       inputImgData.data[i + 3] = outputImgData.data[i + 3];
     }
     ctx.putImageData(inputImgData, 0, 0);
+    await recording('result');
 
     const maskCanvas = maskCanvasRef.current, maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
     maskCanvas.width = img.naturalWidth;
@@ -134,8 +129,10 @@ function App() {
       outputImgData.data[i + 3] = 255;
     }
     maskCtx.putImageData(outputImgData, 0, 0);
+    await recording('mask');
 
-    // setDurationTime(performance.now() - t);
+    await setRecord('total', performance.now() - t);
+    await (new Promise(s => setTimeout(s, 2000)));
     setIsInferencing(false);
   }, []);
   const handleFileSelect = useCallback(({target: { files }}) => {
@@ -213,10 +210,9 @@ function App() {
           <div className='output-wrap'>
             <canvas ref={canvasRef} id='output' className='stripe-bg' />
             <canvas ref={maskCanvasRef} id='mask-output' style={{ display: showMask? '': 'none' }} />
-            <div className='time-board' style={{ display: isInferencing? '': 'none' }}>Magic Time</div>
-            {/* <div className='time-board'>
+            <div className='time-board' style={{ display: isInferencing? '': 'none' }}>
               <table>
-                <thead><tr><th></th>       <th>Time</th></tr></thead>
+                <thead><tr><th>Magic</th>       <th>Time</th></tr></thead>
                 <tbody>
                   <tr><td>Read Image:</td> <td>{timeRecord.read.s}</td></tr>
                   <tr><td>ONNX Ready:</td> <td>{timeRecord.onnx.s}</td></tr>
@@ -224,12 +220,12 @@ function App() {
                   <tr><td>Convert:</td>    <td>{timeRecord.convert.s}</td></tr>
                   <tr><td>Inferencing:</td><td>{timeRecord.inferencing.s}</td></tr>
                   <tr><td>InvNorm:</td>    <td>{timeRecord.invNorm.s}</td></tr>
-                  <tr><td>Gen Mask:</td>   <td>{timeRecord.mask.s}</td></tr>
                   <tr><td>Gen Result:</td> <td>{timeRecord.result.s}</td></tr>
+                  <tr><td>Gen Mask:</td>   <td>{timeRecord.mask.s}</td></tr>
                 </tbody>
                 <tfoot><tr><th>Total:</th> <td>{timeRecord.total.s}</td></tr></tfoot>
               </table>
-            </div> */}
+            </div>
           </div>
         </div>
         <div className='toolbar2'>
@@ -237,7 +233,6 @@ function App() {
           <button className='btn' onClick={handleDownload}>download</button>
         </div>
         <p>
-          {/* <span>Total: {~~(durationTime / 10) / 100} second</span> */}
           The app can only handle images. If it's a .gif, only the first frame can be processed.
         </p>
       </section>
