@@ -1,17 +1,17 @@
 {
   "files": {
     "main.css": "/U2netInBrowser/static/css/main.309c4637.css",
-    "main.js": "/U2netInBrowser/static/js/main.a9af7a4e.js",
+    "main.js": "/U2netInBrowser/static/js/main.0d7495ec.js",
     "static/js/ort-wasm-simd.wasm": "/U2netInBrowser/static/js/ort-wasm-simd.wasm",
     "static/js/ort-wasm-simd-threaded.wasm": "/U2netInBrowser/static/js/ort-wasm-simd-threaded.wasm",
     "static/js/ort-wasm.wasm": "/U2netInBrowser/static/js/ort-wasm.wasm",
     "static/js/ort-wasm-threaded.wasm": "/U2netInBrowser/static/js/ort-wasm-threaded.wasm",
     "index.html": "/U2netInBrowser/index.html",
     "main.309c4637.css.map": "/U2netInBrowser/static/css/main.309c4637.css.map",
-    "main.a9af7a4e.js.map": "/U2netInBrowser/static/js/main.a9af7a4e.js.map"
+    "main.0d7495ec.js.map": "/U2netInBrowser/static/js/main.0d7495ec.js.map"
   },
   "entrypoints": [
     "static/css/main.309c4637.css",
-    "static/js/main.a9af7a4e.js"
+    "static/js/main.0d7495ec.js"
   ]
 }
