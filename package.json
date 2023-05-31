@@ -2,7 +2,7 @@
   "name": "u-2-net-in-browser",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://jerrychan7.github.io/U2netInBrowser/",
+  "homepage": ".",
   "dependencies": {
     "onnxruntime-web": "^1.14.0",
     "react": "^18.2.0",
